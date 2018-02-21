@@ -1,0 +1,164 @@
+
+CREATE TABLE `library1`.`publisher`(
+   `PublisherID` INT(10) NOT NULL PRIMARY KEY,
+   `Publisher Name` VARCHAR(70),
+   `Publisher Address` VARCHAR(255)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`author`(
+   `AuthorID` INT(10) NOT NULL,
+   `AuthorName` VARCHAR(70),
+   PRIMARY KEY (`AuthorID`)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`document`(
+	`DocID` INT(10) NOT NULL PRIMARY KEY,
+    `Title` VARCHAR(255),
+    `Publication Date` DATE,
+    `doc_PublisherID` INT(10) NOT NULL,
+    foreign key(`doc_PublisherID`) references `publisher`(`PublisherID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+
+CREATE TABLE `library1`.`write`(
+   `w_authorID` INT(10) NOT NULL,
+   `w_DocID` INT(10) NOT NULL,
+   FOREIGN KEY(`w_authorID`) REFERENCES `author`(`AuthorID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`w_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = INNODB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`branch`(
+   `LibID` INT(10) NOT NULL PRIMARY KEY,
+   `Branch Name` VARCHAR(20),
+   `Branch Location` VARCHAR(255)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`book`(
+   `book_DocID` INT(10) NOT NULL PRIMARY KEY,
+   `ISBN` VARCHAR(13),
+   FOREIGN KEY(`book_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`chief editor`(
+   `EditorID` INT(10) NOT NULL PRIMARY KEY,
+   `Editor Name` VARCHAR(70)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`journal volumn`(
+   `Volumn number` INT(10) NOT NULL,
+   `journal_docID` INT(10) NOT NULL PRIMARY KEY,
+   `journal_EditorID` INT(10) NOT NULL ,
+   FOREIGN KEY(`journal_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`journal_EditorID`) REFERENCES `chief editor`(`EditorID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`journal volumn`(
+   `Volumn number` INT(10) NOT NULL,
+   `journal_docID` INT(10) NOT NULL PRIMARY KEY,
+   `journal_EditorID` INT(10) NOT NULL,
+   FOREIGN KEY(`journal_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`journal_EditorID`) REFERENCES `chief editor`(`EditorID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`proceeding`(
+   `conference date` DATE,
+   `conference_docID` INT(10) NOT NULL PRIMARY KEY,
+   `conference location` VARCHAR(255) ,
+   `conference chair` VARCHAR(70),
+   FOREIGN KEY(`conference_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`journal issue`(
+   `Issue Number` TINYINT(3) NOT NULL primary key check(`Issue Number` < 10) ,
+   `Scope` TINYTEXT,
+   `issue_docID` INT(10) NOT NULL ,
+   `issue_editorID` INT(10) NOT NULL,
+   FOREIGN KEY(`issue_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`issue_EditorID`) REFERENCES `chief editor`(`EditorID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`issue editor`(
+   `iEditor_IssueNum` TINYINT(3) NOT NULL primary key,
+   `iEditor_docID` INT(10) NOT NULL,
+   `Editor Name` VARCHAR(70) NOT NULL,
+   FOREIGN KEY(`iEditor_IssueNum`) REFERENCES `journal issue`(`Issue Number`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`iEditor_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`reader`(
+   `readerID` INT(10) NOT NULL primary key,
+   `type` varchar(20) NOT NULL,
+   `Reader Name` VARCHAR(70) NOT NULL,
+   `Phone Number` VARCHAR(20),
+   `Address` VARCHAR(255)
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`descriptor`(
+   `des_docID` INT(10) NOT NULL primary key,
+   `descriptor` TINYTEXT NOT NULL,
+   FOREIGN KEY(`des_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`copy`(
+   `copy_docID` INT(10) NOT NULL,
+   `copy_libID` INT(10) NOT NULL,
+   `copyNum` INT(10) NOT NULL primary key,
+   `Position` CHAR(6),
+   FOREIGN KEY(`copy_libID`) REFERENCES `branch`(`LibID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`copy_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`has`(
+   `has_libID` INT(10) NOT NULL primary key,
+   `has_docID` INT(10) NOT NULL,
+   `has_copyNum` INT(10) NOT NULL,
+   FOREIGN KEY(`has_libID`) REFERENCES `branch`(`LibID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`has_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`has_copyNum`) REFERENCES `copy`(`copyNum`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`borrow transaction`(
+   `BorNumber` INT(10) NOT NULL primary key,
+   `Borrow Date Time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP  ,
+   `Return Date Time` TIMESTAMP DEFAULT NULL,
+   `bortrans_ReaderID` INT(10) NOT NULL,
+   `bortrans_copyNum` INT(10) NOT NULL,
+   FOREIGN KEY(`bortrans_ReaderID`) REFERENCES `reader`(`ReaderID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`bortrans_copyNum`) REFERENCES `copy`(`copyNum`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`borrow`(
+   `bor_BorNumber` INT(10) NOT NULL primary key,
+   `bor_copyNum` INT(10) NOT NULL,
+   `bor_docID` INT(10) NOT NULL,
+   `bor_libID` INT(10) NOT NULL,
+   `bor_ReaderID` INT(10) NOT NULL,
+   FOREIGN KEY(`bor_BorNumber`) REFERENCES `borrow transaction`(`BorNumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`bor_libID`) REFERENCES `branch`(`LibID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`bor_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`bor_copyNum`) REFERENCES `copy`(`copyNum`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`bor_ReaderID`) REFERENCES `reader`(`ReaderID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`reservation`(
+   `ResNumber` INT(10) NOT NULL primary key,
+   `Reservation Date Time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ,
+   `res_readerID` INT(10) NOT NULL,
+   `res_copyNum` INT(10) NOT NULL,
+   FOREIGN KEY(`res_ReaderID`) REFERENCES `reader`(`ReaderID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`res_copyNum`) REFERENCES `copy`(`copyNum`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
+
+CREATE TABLE `library1`.`reserve`(
+   `res_ReaderID` INT(10) NOT NULL,
+   `res_ResNumber` INT(10) NOT NULL primary key,
+   `res_copyNum` INT(10) NOT NULL,
+   `res_docID` INT(10) NOT NULL,
+   `res_libID` INT(10) NOT NULL,
+   
+   FOREIGN KEY(`res_ResNumber`) REFERENCES `reservation`(`Resnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`res_libID`) REFERENCES `branch`(`LibID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`res_docID`) REFERENCES `document`(`DocID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`res_copyNum`) REFERENCES `copy`(`copyNum`) ON DELETE CASCADE ON UPDATE CASCADE,
+   FOREIGN KEY(`res_ReaderID`) REFERENCES `reader`(`ReaderID`) ON DELETE CASCADE ON UPDATE CASCADE
+)ENGINE = InnoDB DEFAULT CHARSET = utf8;
